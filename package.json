@@ -1,7 +1,7 @@
 {
-  "name": "@trigger.dev/templates-hello-world",
+  "name": "@trigger.dev/templates-cron-basic",
   "version": "1.0.0",
-  "description": "A basic starter template for hosted Trigger.dev functions",
+  "description": "A a simple CRON job workflow template that runs every weekday at 9:00 AM UTC.",
   "main": "dist/index.js",
   "private": true,
   "scripts": {

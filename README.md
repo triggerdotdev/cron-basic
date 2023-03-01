@@ -1,25 +1,26 @@
-## ✨ Trigger.dev Hello World
+## ✨ Trigger.dev Basic CRON Workflow
 
-This repo is a very simple starting point for creating your Trigger.dev workflows.
+This repo contains a simple CRON job workflow that runs every weekday at 9:00 AM UTC.
 
-Currently this repo only has a single [customEvent](https://docs.trigger.dev/triggers/custom-events) trigger:
+It is a great starting point for creating your own scheduled workflows.
+
+To easily create CRON schedules, we recommend using [crontab.guru](https://crontab.guru/).
 
 ```ts
-import { Trigger, customEvent } from "@trigger.dev/sdk";
+import { Trigger, scheduleEvent } from "@trigger.dev/sdk";
 
 new Trigger({
   // Give your Trigger a stable ID
-  id: "hello-world",
-  name: "Template: Hello World",
-  // Trigger on the custom event named "your.event", see https://docs.trigger.dev/triggers/custom-events
-  on: customEvent({
-    name: "your.event",
-  }),
-  // The run functions gets called once per "your.event" event
-  async run(event, ctx) {
-    await ctx.waitFor("waiting...", { seconds: 10 });
-
-    await ctx.logger.info("Hello world from inside trigger.dev");
+  id: "cron-basic",
+  name: "Trigger event at 9am every weekday",
+  //Trigger this event at 09:00 on every day-of-week from Monday through Friday. (https://crontab.guru/#0_9_*_*_1-5)
+  on: scheduleEvent({ cron: "0 9 * * 1-5" }),
+  run: async (event, ctx) => {
+    // This can be anything - e.g. update your database, send an email or post a daily Slack update etc
+    // Create a log at the correct time
+    await ctx.logger.info("Received the cron scheduled event", {
+      event,
+    });
   },
 }).listen();
 ```
@@ -29,66 +30,40 @@ new Trigger({
 You can easily create a new project interactively based on this template by running:
 
 ```sh
-npx create-trigger@latest hello-world
+npx create-trigger@latest cron-basic
 # or
-yarn create trigger hello-world
+yarn create trigger cron-basic
 # or
-pnpm create trigger@latest hello-world
+pnpm create trigger@latest cron-basic
 ```
 
 Follow the instructions in the CLI to get up and running locally in <30s.
 
-## 📺 Go Live
+### 🧪 Test it
 
-After you are happy with your campaign and deploy it live to Render.com (or some other hosting service), you can send custom events that Trigger your workflow using the [sendEvent](https://docs.trigger.dev/reference/send-event) function from the `@trigger.dev/sdk`, or simply by making requests to our [`events`](https://docs.trigger.dev/api-reference/events/sendEvent) API endpoint.
-
-Here is an example of sending the custom event to trigger the workflow contained in this repo using `fetch`:
-
-```ts
-const event = {
-  name: "your.event",
-  payload: {
-    hello: "world",
-  },
-};
-
-const response = await fetch("https://app.trigger.dev/api/v1/events", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.TRIGGER_API_KEY}`,
-  },
-  body: JSON.stringify({
-    id: randomUUID(),
-    event,
-  }),
-});
-```
+After successfully running this template locally, head over to your [Trigger.dev Dashboard](https://app.trigger.dev) and you should see your newly created workflow.
 
 ## ✍️ Customize
 
-You can easily adapt this workflow to a different event relevant to your app. For example, we have a workflow that runs when a user is created and it looks like this:
+You can easily adapt this workflow for example, we have a workflow that runs once a year on the 1st of January and posts a Slack message wishing our team a Happy New Year.
 
 ```ts
-import { Trigger, customEvent } from "@trigger.dev/sdk";
+import { Trigger, scheduleEvent } from "@trigger.dev/sdk";
 import * as slack from "@trigger.dev/slack";
-import { z } from "zod";
 
 new Trigger({
-  id: "new-user",
-  name: "New user",
-  on: customEvent({
-    name: "user.created",
-    schema: z.object({ id: z.string() }),
-  }),
-  async run(event, ctx) {
-    const user = await prisma.user.find({
-      where: { id: event.id },
-    });
+  // Give your Trigger a stable ID
+  id: "cron-happy-new-year",
+  name: "Happy New Year!",
 
+  //Trigger this event at 12am every 1st of January, every year.
+  on: scheduleEvent({ cron: "0 12 1 1 *" }),
+  run: async (event, ctx) => {
+    // This can be anything - e.g. update your database, send an email or post a daily Slack update etc
+    // log the event at the correct time
     await slack.postMessage("🚨", {
-      channelName: "new-users",
-      text: `New user signed up: ${user.email}`,
+      channelName: "happy-new-year",
+      text: `🎉 Happy New Year team! 🎉 `,
     });
   },
 }).listen();
